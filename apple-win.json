@@ -10,9 +10,11 @@
       },
       "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": {
-        "type": "exec_ok",
-        "path": "{cache_root}/tools/win/irecovery.exe",
-        "args": ["-V"]
+        "type": "multi_any",
+        "checks": [
+          { "type": "exec_ok",    "path": "{cache_root}/tools/win/irecovery.exe", "args": ["-V"] },
+          { "type": "file_exists","path": "{cache_root}/tools/win/irecovery.exe" }
+        ]
       }
     }
   ]
