@@ -1,16 +1,39 @@
-{ "version": 1, "category": "apple", "platform": "mac",
+{
   "items": [
     {
       "id": "checkm8-pack",
-      "title": "TechGuy Checkm8 Pack (macOS)",
+      "title": "TechGuy Checkm8 Pack",
       "release": {
-        "source": "github",
-        "repo": "jaydumisuni/TechGuyCheckm8",
-        "asset_glob": "TechGuyCheckm8.zip",
-        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/download/v1.0.0/TechGuyCheckm8.zip"
+        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip",
+        "checksum": ""
       },
-      "install": { "type": "unzip", "dest": "{cache_root}/tools/mac/" },
-      "check":   { "type": "exec_ok", "path": "{cache_root}/tools/mac/irecovery", "args": ["-V"] }
+      "install": { "type": "unzip", "dest": "{cache_root}/" },
+      "check": {
+        "type": "multi_any",
+        "checks": [
+          { "type": "exec_ok", "path": "{cache_root}/tools/mac/irecovery", "args": ["-V"] }
+        ]
+      }
+    },
+    {
+      "id": "arduino-cli",
+      "title": "Arduino CLI",
+      "release": {
+        "direct": "https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_macOS_64bit.zip",
+        "checksum": ""
+      },
+      "install": { "type": "unzip", "dest": "{cache_root}/tools/arduino-cli" },
+      "check": { "type": "exec_ok", "path": "{cache_root}/tools/arduino-cli/arduino-cli", "args": ["version"] }
+    },
+    {
+      "id": "android-platform-tools",
+      "title": "Android Platform-Tools",
+      "release": {
+        "direct": "https://dl.google.com/android/repository/platform-tools-latest-darwin.zip",
+        "checksum": ""
+      },
+      "install": { "type": "unzip", "dest": "{cache_root}/tools/platform-tools" },
+      "check": { "type": "exec_ok", "path": "{cache_root}/tools/platform-tools/platform-tools/adb", "args": ["version"] }
     }
   ]
 }
