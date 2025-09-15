@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "os": "linux",
   "items": [
     {
@@ -14,6 +14,16 @@
         "path": "{cache_root}/TechGuyCheckm8/tools/linux/irecovery",
         "args": ["-V"]
       }
+    },
+    {
+      "id": "python3-runtime-linux",
+      "title": "Python3 runtime (linux)",
+      "check": {
+        "type": "exec_ok",
+        "path": "python3",
+        "args": ["--version"]
+      },
+      "notes": "Python3 not found. Install with: sudo apt install -y python3"
     },
     {
       "id": "ipwndfu-linux",
