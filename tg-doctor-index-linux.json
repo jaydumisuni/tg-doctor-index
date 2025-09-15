@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "os": "linux",
+  "items": [
+    {
+      "id": "checkm8-pack",
+      "title": "TechGuy Checkm8 Pack",
+      "release": {
+        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip"
+      },
+      "install": { "type": "unzip", "dest": "{cache_root}/" },
+      "check": {
+        "type": "exec_ok",
+        "path": "{cache_root}/tools/linux/irecovery",
+        "args": ["-V"]
+      }
+    }
+  ]
+}
