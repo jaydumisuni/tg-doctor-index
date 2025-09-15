@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "os": "windows",
   "items": [
     {
@@ -12,8 +12,8 @@
       "check": {
         "type": "multi_any",
         "checks": [
-          { "type": "exec_ok", "path": "{cache_root}/tools/win/irecovery.exe", "args": ["-V"] },
-          { "type": "file_exists", "path": "{cache_root}/tools/win/irecovery.exe" }
+          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] },
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe" }
         ]
       }
     },
@@ -23,12 +23,12 @@
       "release": {
         "direct": "https://github.com/jaydumisuni/libusb/releases/download/v1.0.29/libusb-1.0.29-win64.zip"
       },
-      "install": { "type": "unzip", "dest": "{cache_root}/tools/win/" },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
       "check": {
         "type": "multi_any",
         "checks": [
-          { "type": "file_exists", "path": "{cache_root}/tools/win/libusb-1.0.dll" },
-          { "type": "exec_ok", "path": "{cache_root}/tools/win/irecovery.exe", "args": ["-V"] }
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
+          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
         ]
       }
     }
