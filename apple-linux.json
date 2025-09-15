@@ -1,5 +1,5 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "os": "linux",
   "items": [
     {
@@ -13,6 +13,19 @@
         "type": "exec_ok",
         "path": "{cache_root}/TechGuyCheckm8/tools/linux/irecovery",
         "args": ["-V"]
+      }
+    },
+    {
+      "id": "ipwndfu-linux",
+      "title": "ipwndfu (linux)",
+      "release": {
+        "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip"
+      },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/linux/" },
+      "check": {
+        "type": "exec_ok",
+        "path": "python3",
+        "args": ["{cache_root}/TechGuyCheckm8/tools/linux/ipwndfu-master/ipwndfu", "-h"]
       }
     }
   ]
