@@ -1,5 +1,5 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "os": "windows",
   "items": [
     {
@@ -30,6 +30,29 @@
           { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
           { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
         ]
+      }
+    },
+    {
+      "id": "python3-runtime-win",
+      "title": "Python3 runtime (win)",
+      "check": {
+        "type": "exec_ok",
+        "path": "py",
+        "args": ["-3", "--version"]
+      },
+      "notes": "Python 3 not found. Install from https://www.python.org/downloads/windows/ and ensure 'py' launcher is available."
+    },
+    {
+      "id": "ipwndfu-win",
+      "title": "ipwndfu (win)",
+      "release": {
+        "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip"
+      },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
+      "check": {
+        "type": "exec_ok",
+        "path": "py",
+        "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"]
       }
     }
   ]
