@@ -1,39 +1,19 @@
 {
+  "version": "1.0",
+  "os": "windows",
   "items": [
     {
       "id": "checkm8-pack",
       "title": "TechGuy Checkm8 Pack",
       "release": {
-        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip",
-        "checksum": ""
+        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip"
       },
       "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "exec_ok", "path": "{cache_root}/tools/linux/irecovery", "args": ["-V"] }
-        ]
+        "type": "exec_ok",
+        "path": "{cache_root}/tools/win/irecovery.exe",
+        "args": ["-V"]
       }
-    },
-    {
-      "id": "arduino-cli",
-      "title": "Arduino CLI",
-      "release": {
-        "direct": "https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.zip",
-        "checksum": ""
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/tools/arduino-cli" },
-      "check": { "type": "exec_ok", "path": "{cache_root}/tools/arduino-cli/arduino-cli", "args": ["version"] }
-    },
-    {
-      "id": "android-platform-tools",
-      "title": "Android Platform-Tools",
-      "release": {
-        "direct": "https://dl.google.com/android/repository/platform-tools-latest-linux.zip",
-        "checksum": ""
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/tools/platform-tools" },
-      "check": { "type": "exec_ok", "path": "{cache_root}/tools/platform-tools/platform-tools/adb", "args": ["version"] }
     }
   ]
 }
