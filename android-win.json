@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "2.1",
   "os": "windows",
   "items": [
     {
@@ -14,26 +14,37 @@
           "$b = (bcdedit /enum | Out-String); if ($b -match 'testsigning\\s+Yes' -or $b -match 'nointegritychecks\\s+Yes') { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Required for driver installs. If this fails, run {cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1 (reboot required)."
+      "notes": "Required for some driver installs. If this fails, run {cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1 (reboot required)."
     },
     {
       "id": "doctor-installer-helper-win",
       "title": "Doctor installer helper present",
-      "check": {
-        "type": "file_exists",
-        "path": "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1"
-      },
-      "notes": "Required to show TECHGUY DOCTOR pop-up + progress and to install drivers with cleanup."
+      "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1" },
+      "notes": "Required to show TECHGUY DOCTOR progress and install drivers with cleanup."
     },
 
     {
       "id": "vc-runtimes-win",
       "title": "Visual C++ Runtimes (All-in-One)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1", "-ZipUrl", "https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip", "-CheckType", "vc_runtimes" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip",
+          "-CheckType","vc_runtimes"
+        ]
+      },
       "check": {
-        "type": "exec_ok", "path": "powershell",
-        "args": [ "-NoProfile", "-Command", "$keys='HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'; $ok=Get-ChildItem $keys -ErrorAction SilentlyContinue | % {Get-ItemProperty $_.PSPath} | ? {$_.DisplayName -match 'Microsoft Visual C\\+\\+.*Redistributable'}; if ($ok) {exit 0} else {exit 1}" ]
+        "type": "exec_ok",
+        "path": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$keys='HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'; $ok=Get-ChildItem $keys -ErrorAction SilentlyContinue | % {Get-ItemProperty $_.PSPath} | ? {$_.DisplayName -match 'Microsoft Visual C\\+\\+.*Redistributable'}; if ($ok) {exit 0} else {exit 1}"
+        ]
       }
     },
 
@@ -41,7 +52,16 @@
       "id": "universal-adb-driver-win",
       "title": "Universal ADB Driver",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip","-CheckType","adb_universal" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip",
+          "-CheckType","adb_universal"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Android ADB Interface' -or $txt -match 'androidwinusb' -or $txt -match 'Google, Inc.' ) {exit 0} else {exit 1}" ] }
     },
 
@@ -49,7 +69,16 @@
       "id": "qualcomm-qdloader-win",
       "title": "Qualcomm QDLoader (9008)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip","-CheckType","qualcomm" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip",
+          "-CheckType","qualcomm"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Qualcomm.*QDLoader' -or $txt -match 'HS-USB QDLoader 9008' -or $txt -match 'Provider\\s*:\\s*Qualcomm') {exit 0} else {exit 1}" ] }
     },
 
@@ -57,7 +86,16 @@
       "id": "mediatek-vcom-win",
       "title": "MediaTek VCOM (Preloader/DA)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip","-CheckType","mtk_vcom" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip",
+          "-CheckType","mtk_vcom"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'MediaTek' -or $txt -match 'VCOM' -or $txt -match 'Preloader') {exit 0} else {exit 1}" ] }
     },
 
@@ -65,7 +103,16 @@
       "id": "unisoc-spreadtrum-inf-win",
       "title": "Unisoc / Spreadtrum (INF pack)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip","-CheckType","unisoc_inf" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip",
+          "-CheckType","unisoc_inf"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
     },
 
@@ -73,7 +120,16 @@
       "id": "unisoc-spreadtrum-setup-win",
       "title": "Unisoc / Spreadtrum (Setup EXE)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip","-CheckType","unisoc_setup" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip",
+          "-CheckType","unisoc_setup"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
     },
 
@@ -81,7 +137,16 @@
       "id": "samsung-usb-win",
       "title": "Samsung USB Driver",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip","-CheckType","samsung_usb" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip",
+          "-CheckType","samsung_usb"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'SAMSUNG.*USB' -or $txt -match 'Samsung Android USB') {exit 0} else {exit 1}" ] }
     },
 
@@ -89,7 +154,16 @@
       "id": "exynos-eub-driver-win",
       "title": "Samsung Exynos EUB Driver",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip","-CheckType","exynos_eub" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip",
+          "-CheckType","exynos_eub"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Exynos' -or ($txt -match 'Samsung' -and $txt -match 'USB')) {exit 0} else {exit 1}" ] }
     },
 
@@ -97,7 +171,16 @@
       "id": "huawei-usb-com-win",
       "title": "Huawei USB/COM Drivers",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip","-CheckType","huawei_usb" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip",
+          "-CheckType","huawei_usb"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HUAWEI' -or $txt -match 'hw_usbdev' -or $txt -match 'hw_usbvcom') {exit 0} else {exit 1}" ] }
     },
 
@@ -105,7 +188,16 @@
       "id": "lg-usb-win",
       "title": "LG Mobile Driver",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip","-CheckType","lg_usb" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip",
+          "-CheckType","lg_usb"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'LG Mobile' -or $txt -match 'LG Electronics') {exit 0} else {exit 1}" ] }
     },
 
@@ -113,7 +205,16 @@
       "id": "htc-usb-win",
       "title": "HTC USB Driver",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip","-CheckType","htc_usb" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip",
+          "-CheckType","htc_usb"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HTC' -or $txt -match 'BMP USB') {exit 0} else {exit 1}" ] }
     },
 
@@ -121,7 +222,16 @@
       "id": "blackberry-usb-win",
       "title": "BlackBerry USB (for Android OS)",
       "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/BlackBerry-USBDrivers-5.0.0.2_For+Android+OS.zip" },
-      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/BlackBerry-USBDrivers-5.0.0.2_For+Android+OS.zip","-CheckType","blackberry_usb" ] },
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass",
+          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1",
+          "-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/BlackBerry-USBDrivers-5.0.0.2_For+Android+OS.zip",
+          "-CheckType","blackberry_usb"
+        ]
+      },
       "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'BlackBerry' -or $txt -match 'Research In Motion') {exit 0} else {exit 1}" ] }
     },
 
