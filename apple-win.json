@@ -1,5 +1,5 @@
 {
-  "version": "2.3",
+  "version": "2.4",
   "os": "windows",
   "items": [
     {
@@ -23,10 +23,11 @@
         "type": "multi_all",
         "checks": [
           { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1" },
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1" }
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1" },
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py" }
         ]
       },
-      "notes": "DSE toggle + Apple driver installer (install-once with cleanup)."
+      "notes": "DSE toggle + Apple driver installer + Arduino status helper."
     },
     {
       "id": "checkm8-pack",
@@ -52,7 +53,8 @@
           { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
           { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
         ]
-      }
+      },
+      "notes": "Stages libusb-1.0.dll next to irecovery.exe."
     },
     {
       "id": "python3-runtime-win",
@@ -92,7 +94,8 @@
       "title": "ipwndfu (win)",
       "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] }
+      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] },
+      "notes": "Relies on Python3 + pyusb + libusb DLL staged earlier."
     },
     {
       "id": "apple-drivers-win",
@@ -116,19 +119,13 @@
           "$ok1 = @(Get-ChildItem 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object { try { (Get-ItemProperty $_.PSPath).DisplayName } catch {} } | Where-Object { $_ -match 'Apple Mobile Device Support' }).Count -gt 0; $ok2 = (pnputil /enum-drivers | Out-String) -match 'Apple Mobile Device USB DFU'; if ($ok1 -and $ok2) { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Unzips to temp, installs Apple Mobile Device Support + DFU INF, then deletes installers. Requires DSE disabled (see top)."
+      "notes": "Unzips to temp, installs AMDS + DFU INF, then deletes installers. Requires DSE disabled."
     },
     {
       "id": "arduino-cli-win",
       "title": "Arduino CLI (win)",
       "check": { "type": "exec_ok", "path": "arduino-cli", "args": ["version"] },
       "notes": "If this fails: install from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
-    },
-    {
-      "id": "arduino-helper-present-win",
-      "title": "Arduino status helper present",
-      "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py" },
-      "notes": "Helper used by the GUI to detect Arduino ports and connection state."
     },
     {
       "id": "zadig-tool-win",
