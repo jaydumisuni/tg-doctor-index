@@ -1,61 +1,126 @@
 {
-  "version": "2.1",
-  "os": "linux",
+  "version": "2.2",
+  "os": "windows",
   "items": [
     {
       "id": "checkm8-pack",
       "title": "TechGuy Checkm8 Pack",
+      "release": { "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/" },
+      "check": {
+        "type": "multi_any",
+        "checks": [
+          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] },
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe" }
+        ]
+      }
+    },
+
+    {
+      "id": "pongoos-win",
+      "title": "PongoOS (fork)",
+      "release": { "direct": "https://github.com/jaydumisuni/PongoOS/archive/refs/heads/master.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/pongo/" },
+      "check": { "type": "file_exists", "path": "{cache_root}/pongo/PongoOS-master/README.md" },
+      "notes": "Stages your fork of PongoOS under {cache_root}/pongo/. Add PongoOS build artifacts or scripts to this folder as needed."
+    },
+
+    {
+      "id": "pyusb-runtime-win",
+      "title": "pyusb (python) runtime",
+      "check": {
+        "type": "exec_ok",
+        "path": "py",
+        "args": ["-3", "-c", "import usb; print(usb.__version__)"]
+      },
+      "notes": "If this fails: install pyusb (py -3 -m pip install pyusb) and ensure libusb is present (we stage libusb-1.0.dll)."
+    },
+
+    {
+      "id": "libimobile-windows",
+      "title": "libimobiledevice (windows) staged",
       "release": {
-        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip"
+        "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip"
       },
       "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": {
-        "type": "exec_ok",
-        "path": "{cache_root}/TechGuyCheckm8/tools/linux/irecovery",
-        "args": ["-V"]
+        "type": "multi_any",
+        "checks": [
+          { "type": "file_exists", "path": "{cache_root}/libimobiledevice/ideviceinfo.exe" },
+          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" }
+        ]
+      },
+      "notes": "Stages libimobiledevice Windows binaries if present in the drivers zip. If missing, supply ideviceinfo.exe under {cache_root}/libimobiledevice/."
+    },
+
+    {
+      "id": "libusb-runtime-win",
+      "title": "libusb runtime (win)",
+      "release": { "direct": "https://github.com/jaydumisuni/libusb/releases/download/v1.0.29/libusb-1.0.29-win64.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
+      "check": {
+        "type": "multi_any",
+        "checks": [
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
+          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
+        ]
       }
     },
+
     {
-      "id": "python3-runtime-linux",
-      "title": "Python3 runtime (linux)",
-      "check": {
-        "type": "exec_ok",
-        "path": "python3",
-        "args": ["--version"]
-      },
-      "notes": "Python3 not found. Install with: sudo apt install -y python3"
+      "id": "ipwndfu-win",
+      "title": "ipwndfu (win)",
+      "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
+      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] }
     },
+
     {
-      "id": "ipwndfu-linux",
-      "title": "ipwndfu (linux)",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/linux/" },
+      "id": "apple-windows-drivers-pack",
+      "title": "Apple + Arduino Windows Drivers",
+      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": {
-        "type": "exec_ok",
-        "path": "python3",
-        "args": ["{cache_root}/TechGuyCheckm8/tools/linux/ipwndfu-master/ipwndfu", "-h"]
-      }
+        "type": "multi_any",
+        "checks": [
+          { "type": "file_exists", "path": "{cache_root}/apple_dfu/apple_dfu_inf_pack.zip" },
+          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" },
+          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/checkm8-a5-master/checkm8-a5-master.ino" },
+          { "type": "file_exists", "path": "{cache_root}/libusbk/zadig.exe" },
+          { "type": "file_exists", "path": "{cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi" }
+        ]
+      },
+      "notes": "Stages Apple DFU + MobileDeviceSupport, Arduino libraries, Zadig, and UsbDk MSI inside assets."
     },
+
     {
-      "id": "arduino-cli-linux",
-      "title": "Arduino CLI (linux)",
-      "check": {
-        "type": "exec_ok",
-        "path": "arduino-cli",
-        "args": ["version"]
-      },
-      "notes": "If this fails (Debian/Ubuntu): sudo apt install -y arduino-cli  • or use official tarball from Arduino."
+      "id": "arduino-cli-win",
+      "title": "Arduino CLI (win)",
+      "check": { "type": "exec_ok", "path": "arduino-cli", "args": ["version"] },
+      "notes": "If this fails: install Arduino CLI from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
     },
+
     {
-      "id": "arduino-helper-present-linux",
-      "title": "Arduino status helper present (linux)",
-      "check": {
-        "type": "file_exists",
-        "path": "{cache_root}/TechGuyCheckm8/tools/linux/arduino_status.py"
-      },
+      "id": "arduino-helper-present-win",
+      "title": "Arduino status helper present",
+      "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py" },
       "notes": "Helper script used by the GUI to detect Arduino ports and connection state."
+    },
+
+    {
+      "id": "dfu-driver-binding-win",
+      "title": "DFU driver binding (WinUSB/libusbK/UsbDk) — non-intrusive",
+      "check": {
+        "type": "exec_ok",
+        "path": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$ids='VID_05AC&PID_1227'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
+        ]
+      },
+      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk. Fails only when a DFU device is present and bound to Apple driver."
     }
+
   ]
 }
