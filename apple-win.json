@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "2.1",
   "os": "windows",
   "items": [
     {
@@ -65,16 +65,18 @@
       "check": {
         "type": "multi_any",
         "checks": [
-          { "type": "file_exists", "path": "{cache_root}/apple_dfu" },
-          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support" },
-          { "type": "file_exists", "path": "{cache_root}/libusbk" },
-          { "type": "file_exists", "path": "{cache_root}/UsbDk" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_2.0" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_Library_2.0" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/checkm8-a5-master" },
-          { "type": "file_exists", "path": "{cache_root}/arduino-cli core" }
+          { "type": "file_exists", "path": "{cache_root}/apple_dfu/apple_dfu_inf_pack.zip" },
+          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" },
+          { "type": "file_exists", "path": "{cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi" },
+          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/checkm8-a5-master/checkm8-a5-master.ino" },
+          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USBHost/src/Usb.cpp" },
+          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_2.0/Usb.cpp" },
+          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_Library_2.0/Usb.cpp" },
+          { "type": "file_exists", "path": "{cache_root}/libusbk/zadig.exe" },
+          { "type": "file_exists", "path": "{cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi" }
         ]
-      }
+      },
+      "notes": "Stages Apple DFU + MobileDeviceSupport, Arduino CLI + libraries, Zadig, and UsbDk MSI inside assets."
     },
     {
       "id": "zadig-tool-win",
@@ -87,21 +89,54 @@
         "type": "file_exists",
         "path": "{cache_root}/TechGuyCheckm8/tools/win/zadig.exe"
       },
-      "notes": "Use Zadig to bind DFU to WinUSB/libusbK:\n1) Put device in DFU (black screen).\n2) Open {cache_root}/TechGuyCheckm8/tools/win/zadig.exe.\n3) Options → List All Devices.\n4) Select 'Apple Mobile Device (DFU Mode)'.\n5) Choose 'WinUSB' or 'libusbK' → Install Driver."
+      "notes": "Use Zadig to bind Apple DFU to WinUSB/libusbK if needed:\n1) Put device in DFU (black screen).\n2) Open {cache_root}/TechGuyCheckm8/tools/win/zadig.exe.\n3) Options → List All Devices.\n4) Select 'Apple Mobile Device (DFU Mode)'.\n5) Choose 'WinUSB' or 'libusbK' → Install Driver."
     },
     {
-      "id": "dfu-driver-binding-win",
-      "title": "DFU driver binding (WinUSB/libusbK)",
+      "id": "usbdk-installed-win",
+      "title": "UsbDk driver installed",
       "check": {
         "type": "exec_ok",
         "path": "powershell",
         "args": [
           "-NoProfile",
           "-Command",
-          "$has = Get-PnpDevice -PresentOnly | Where-Object {$_.InstanceId -match 'VID_05AC&PID_1227'} | ForEach-Object { try { (Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data } catch {} } | Where-Object { $_ -match 'winusb|libusbk' }; if ($has) { exit 0 } else { exit 1 }"
+          "$svc = Get-Service -Name 'UsbDk' -ErrorAction SilentlyContinue; if ($svc -and $svc.Status -ne 'Stopped') { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "If this fails: DFU is bound to Apple driver. Run Zadig → select 'Apple Mobile Device (DFU Mode)' → choose WinUSB or libusbK → Install Driver → re-run checks."
+      "notes": "If this fails: run {cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi, then re-run checks."
+    },
+    {
+      "id": "dfu-driver-binding-win",
+      "title": "DFU driver binding (WinUSB/libusbK/UsbDk) — non-intrusive",
+      "check": {
+        "type": "exec_ok",
+        "path": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$ids='VID_05AC&PID_1227'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
+        ]
+      },
+      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk. Fails only when a DFU device is present and bound to Apple driver."
+    },
+    {
+      "id": "arduino-cli-win",
+      "title": "Arduino CLI (win)",
+      "check": {
+        "type": "exec_ok",
+        "path": "arduino-cli",
+        "args": ["version"]
+      },
+      "notes": "If this fails: install Arduino CLI from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
+    },
+    {
+      "id": "arduino-helper-present-win",
+      "title": "Arduino status helper present",
+      "check": {
+        "type": "file_exists",
+        "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py"
+      },
+      "notes": "Helper script used by the GUI to detect Arduino ports and connection state."
     }
   ]
 }
