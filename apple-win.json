@@ -16,7 +16,6 @@
       },
       "notes": "Required for driver installs. If this fails, run {cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1 (reboot required)."
     },
-
     {
       "id": "doctor-helper-scripts-win",
       "title": "Doctor helper scripts present",
@@ -29,7 +28,6 @@
       },
       "notes": "DSE toggle + Apple driver installer (install-once with cleanup)."
     },
-
     {
       "id": "checkm8-pack",
       "title": "TechGuy Checkm8 Pack",
@@ -43,7 +41,6 @@
         ]
       }
     },
-
     {
       "id": "libusb-runtime-win",
       "title": "libusb runtime (win)",
@@ -57,21 +54,18 @@
         ]
       }
     },
-
     {
       "id": "python3-runtime-win",
       "title": "Python3 runtime (win)",
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "--version"] },
       "notes": "Install from https://www.python.org/downloads/windows/ if missing."
     },
-
     {
       "id": "pyusb-runtime-win",
       "title": "pyusb (python) runtime",
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "-c", "import usb; print(usb.__version__)"] },
       "notes": "If this fails: py -3 -m pip install pyusb (libusb DLL is staged above)."
     },
-
     {
       "id": "libimobile-windows",
       "title": "libimobiledevice (windows) staged",
@@ -86,7 +80,6 @@
       },
       "notes": "Provide ideviceinfo.exe under {cache_root}/libimobiledevice/ in your drivers zip."
     },
-
     {
       "id": "pongoos-win",
       "title": "PongoOS (fork)",
@@ -94,7 +87,6 @@
       "install": { "type": "unzip", "dest": "{cache_root}/pongo/" },
       "check": { "type": "file_exists", "path": "{cache_root}/pongo/PongoOS-master/README.md" }
     },
-
     {
       "id": "ipwndfu-win",
       "title": "ipwndfu (win)",
@@ -102,7 +94,6 @@
       "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] }
     },
-
     {
       "id": "apple-drivers-win",
       "title": "Apple drivers (install-once, auto-cleanup)",
@@ -127,21 +118,18 @@
       },
       "notes": "Unzips to temp, installs Apple Mobile Device Support + DFU INF, then deletes installers. Requires DSE disabled (see top)."
     },
-
     {
       "id": "arduino-cli-win",
       "title": "Arduino CLI (win)",
       "check": { "type": "exec_ok", "path": "arduino-cli", "args": ["version"] },
       "notes": "If this fails: install from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
     },
-
     {
       "id": "arduino-helper-present-win",
       "title": "Arduino status helper present",
       "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py" },
       "notes": "Helper used by the GUI to detect Arduino ports and connection state."
     },
-
     {
       "id": "zadig-tool-win",
       "title": "Zadig USB Driver Tool (win)",
@@ -150,7 +138,6 @@
       "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/zadig.exe" },
       "notes": "For manual rebinding: Options → List All Devices → select Apple Mobile Device (DFU Mode) → WinUSB/libusbK/UsbDk → Install."
     },
-
     {
       "id": "dfu-driver-binding-win",
       "title": "DFU driver binding (WinUSB/libusbK/UsbDk) — non-intrusive",
@@ -163,7 +150,7 @@
           "$ids='VID_05AC&PID_1227'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk. Fails only when DFU device is present and bound to Apple driver."
+      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk."
     }
   ]
 }
