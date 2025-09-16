@@ -1,176 +1,155 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "os": "windows",
   "items": [
     {
-      "id": "android-windows-drivers-pack",
-      "title": "Android Windows Drivers Pack",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/android.drivers.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/drivers/" },
+      "id": "windows-driver-signature-mode",
+      "title": "Windows Driver Signature Enforcement — DISABLED (Test Mode)",
       "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/drivers/samsung_usb/Samsung_USB_Driver.exe" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/huawei_usb_com/huawei_usb_com_1.0.zip" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/qualcomm_qdloader/QDLoader_9008_Setup.exe" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/mediatek_vcom/mediatek_vcom_inf_pack.zip" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/spd_unisoc/spd_unisoc.exe" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/Samsung Exynos Usb Driver/exynos usb driver.exe" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/universal_adb/UniversalAdbDriverSetup_2.msi" },
-          { "type": "file_exists", "path": "{cache_root}/drivers/Visual-C-Runtimes-All-in-One/install_all.bat" }
+        "type": "exec_ok",
+        "path": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "$b = (bcdedit /enum | Out-String); if ($b -match 'testsigning\\s+Yes' -or $b -match 'nointegritychecks\\s+Yes') { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Unpacks OEM/SoC Android drivers (Samsung, Huawei, Qualcomm, MTK, Unisoc, etc.) and Visual C++ runtimes into {cache_root}/drivers/. Users still must run installers or Update Driver in Device Manager to bind drivers if needed."
+      "notes": "Required for driver installs. If this fails, run {cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1 (reboot required)."
     },
-
     {
-      "id": "adb-win",
-      "title": "Android ADB (win)",
-      "check": {
-        "type": "exec_ok",
-        "path": "{cache_root}/TechGuyCheckm8/tools/win/adb.exe",
-        "args": ["version"]
-      },
-      "notes": "If this fails: place adb.exe here or add to PATH."
-    },
-
-    {
-      "id": "fastboot-win",
-      "title": "Android Fastboot (win)",
-      "check": {
-        "type": "exec_ok",
-        "path": "{cache_root}/TechGuyCheckm8/tools/win/fastboot.exe",
-        "args": ["--version"]
-      },
-      "notes": "If this fails: place fastboot.exe here or add to PATH."
-    },
-
-    {
-      "id": "visual-c-runtimes-win",
-      "title": "Visual C++ Runtimes (staged)",
+      "id": "doctor-installer-helper-win",
+      "title": "Doctor installer helper present",
       "check": {
         "type": "file_exists",
-        "path": "{cache_root}/drivers/Visual-C-Runtimes-All-in-One/install_all.bat"
+        "path": "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1"
       },
-      "notes": "Run install_all.bat in the drivers pack to install required VC++ runtimes if tools need them."
+      "notes": "Required to show TECHGUY DOCTOR pop-up + progress and to install drivers with cleanup."
+    },
+
+    {
+      "id": "vc-runtimes-win",
+      "title": "Visual C++ Runtimes (All-in-One)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1", "-ZipUrl", "https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip", "-CheckType", "vc_runtimes" ] },
+      "check": {
+        "type": "exec_ok", "path": "powershell",
+        "args": [ "-NoProfile", "-Command", "$keys='HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'; $ok=Get-ChildItem $keys -ErrorAction SilentlyContinue | % {Get-ItemProperty $_.PSPath} | ? {$_.DisplayName -match 'Microsoft Visual C\\+\\+.*Redistributable'}; if ($ok) {exit 0} else {exit 1}" ]
+      }
+    },
+
+    {
+      "id": "universal-adb-driver-win",
+      "title": "Universal ADB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip","-CheckType","adb_universal" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Android ADB Interface' -or $txt -match 'androidwinusb' -or $txt -match 'Google, Inc.' ) {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "qualcomm-qdloader-win",
+      "title": "Qualcomm QDLoader (9008)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip","-CheckType","qualcomm" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Qualcomm.*QDLoader' -or $txt -match 'HS-USB QDLoader 9008' -or $txt -match 'Provider\\s*:\\s*Qualcomm') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "mediatek-vcom-win",
+      "title": "MediaTek VCOM (Preloader/DA)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip","-CheckType","mtk_vcom" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'MediaTek' -or $txt -match 'VCOM' -or $txt -match 'Preloader') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "unisoc-spreadtrum-inf-win",
+      "title": "Unisoc / Spreadtrum (INF pack)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip","-CheckType","unisoc_inf" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "unisoc-spreadtrum-setup-win",
+      "title": "Unisoc / Spreadtrum (Setup EXE)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip","-CheckType","unisoc_setup" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "samsung-usb-win",
+      "title": "Samsung USB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip","-CheckType","samsung_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'SAMSUNG.*USB' -or $txt -match 'Samsung Android USB') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "exynos-eub-driver-win",
+      "title": "Samsung Exynos EUB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip","-CheckType","exynos_eub" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Exynos' -or ($txt -match 'Samsung' -and $txt -match 'USB')) {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "huawei-usb-com-win",
+      "title": "Huawei USB/COM Drivers",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip","-CheckType","huawei_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HUAWEI' -or $txt -match 'hw_usbdev' -or $txt -match 'hw_usbvcom') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "lg-usb-win",
+      "title": "LG Mobile Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip","-CheckType","lg_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'LG Mobile' -or $txt -match 'LG Electronics') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "htc-usb-win",
+      "title": "HTC USB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip","-CheckType","htc_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HTC' -or $txt -match 'BMP USB') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "blackberry-usb-win",
+      "title": "BlackBerry USB (for Android OS)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/BlackBerry-USBDrivers-5.0.0.2_For+Android+OS.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/BlackBerry-USBDrivers-5.0.0.2_For+Android+OS.zip","-CheckType","blackberry_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'BlackBerry' -or $txt -match 'Research In Motion') {exit 0} else {exit 1}" ] }
     },
 
     {
       "id": "zadig-tool-win-android",
-      "title": "Zadig (for binding drivers)",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/zadig.zip"
-      },
+      "title": "Zadig (for manual rebinding)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/zadig.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/tools/win/" },
       "check": { "type": "file_exists", "path": "{cache_root}/tools/win/zadig.exe" },
-      "notes": "Use Zadig → Options → List All Devices → select device in download mode → choose WinUSB/libusbK/UsbDk → Replace Driver."
+      "notes": "If a device is present but bound to the wrong driver, use Zadig → Options → List All Devices."
     },
 
-    {
-      "id": "usbdk-installed-win",
-      "title": "UsbDk driver installed",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$svc = Get-Service -Name 'UsbDk' -ErrorAction SilentlyContinue; if ($svc -and $svc.Status -ne 'Stopped') { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "If this fails: run {cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi from the drivers pack, then re-run checks."
-    },
+    { "id": "qualcomm-edl-binding-win", "title": "Qualcomm EDL (9008) — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$ids='(VID_05C6&PID_(9008|900E|90E2)|VID_04B7&PID_98B1)'; $dev=Get-PnpDevice -PresentOnly | ? { $_.InstanceId -match $ids }; if (-not $dev) {exit 0}; $drv=$dev | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'qcser|winusb|libusbk|usbdk' -or $_.Prov -match 'Qualcomm|UsbDk' }) {exit 0} else {exit 1}" ] } },
 
-    {
-      "id": "qualcomm-edl-binding-win",
-      "title": "Qualcomm EDL (9008) Driver Binding — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$ids='(VID_05C6&PID_(9008|900E|90E2)|VID_04B7&PID_98B1)'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'qcser|winusb|libusbk|usbdk' -or $_.Provider -match 'Qualcomm|UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Passes when no EDL device is connected, or if bound to qcser/WinUSB/libusbK/UsbDk."
-    },
+    { "id": "qualcomm-hsusb-binding-win", "title": "Qualcomm HS-USB / Diag — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$ids='VID_05C6&PID_(6000|0012|0013|0014|0015|3225|3226|3227|3228)'; $dev=Get-PnpDevice -PresentOnly | ? { $_.InstanceId -match $ids }; if (-not $dev) {exit 0}; $drv=$dev | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'qcser|winusb|libusbk|usbdk' -or $_.Prov -match 'Qualcomm|UsbDk' }) {exit 0} else {exit 1}" ] } },
 
-    {
-      "id": "qualcomm-hsusb-binding-win",
-      "title": "Qualcomm HS-USB / Diag Binding — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$ids='VID_05C6&PID_(6000|0012|0013|0014|0015|3225|3226|3227|3228)'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'qcser|winusb|libusbk|usbdk' -or $_.Provider -match 'Qualcomm|UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Covers Qualcomm composite/diag interfaces; non-intrusive."
-    },
+    { "id": "mtk-preloader-binding-win", "title": "MediaTek Preloader/DA — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$ids='(VID_0E8D&PID_(0023|2031|2032|2033|2034|2050|2051|2052|2053|2054|2063)|VID_22D9&PID_(2031|2032|2033|2034|2050|2051|2052|2053|2054|2063))'; $dev=Get-PnpDevice -PresentOnly | ? { $_.InstanceId -match $ids }; if (-not $dev) {exit 0}; $drv=$dev | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'usbvcom|mediatek|winusb|libusbk|usbdk' -or $_.Prov -match 'MediaTek|UsbDk' }) {exit 0} else {exit 1}" ] } },
 
-    {
-      "id": "mtk-preloader-binding-win",
-      "title": "MediaTek Preloader / DA Binding — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$ids='(VID_0E8D&PID_(0023|2031|2032|2033|2034|2050|2051|2052|2053|2054|2063)|VID_22D9&PID_(2031|2032|2033|2034|2050|2051|2052|2053|2054|2063))'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'usbvcom|mediatek|winusb|libusbk|usbdk' -or $_.Provider -match 'MediaTek|UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Covers MTK Preloader/DA devices; non-intrusive."
-    },
+    { "id": "unisoc-binding-win", "title": "Unisoc / Spreadtrum — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$ids='(VID_0525&PID_A4A7|VID_1782&PID_(4D00|4D02|4D12|5D29)|VID_2E04&PID_0023)'; $dev=Get-PnpDevice -PresentOnly | ? { $_.InstanceId -match $ids }; if (-not $dev) {exit 0}; $drv=$dev | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'spd|unisoc|winusb|libusbk|usbdk' -or $_.Prov -match 'Spreadtrum|Unisoc|UsbDk' }) {exit 0} else {exit 1}" ] } },
 
-    {
-      "id": "unisoc-binding-win",
-      "title": "Unisoc / Spreadtrum Binding — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$ids='(VID_0525&PID_A4A7|VID_1782&PID_(4D00|4D02|4D12|5D29)|VID_2E04&PID_0023)'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'spd|unisoc|winusb|libusbk|usbdk' -or $_.Provider -match 'Spreadtrum|Unisoc|UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Covers Unisoc/Spreadtrum; non-intrusive."
-    },
+    { "id": "exynos-eub-binding-win", "title": "Samsung Exynos EUB — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$idsMain='VID_04E8&PID_(1234|2909|2910|2911|2912|2913|2914|2915|2916|2917|2918|2919|2920)'; $idsAlt='VID_090C&PID_1000'; $cand=Get-PnpDevice -PresentOnly | ? { $_.InstanceId -match $idsMain -or $_.InstanceId -match $idsAlt }; $cand=$cand | ? { $_.Manufacturer -match 'Samsung' -or $_.FriendlyName -match 'Samsung|Exynos' }; if (-not $cand) {exit 0}; $drv=$cand | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'winusb|libusbk|usbdk' -or $_.Prov -match 'UsbDk' }) {exit 0} else {exit 1}" ] } },
 
-    {
-      "id": "exynos-eub-driver-binding-win",
-      "title": "Samsung Exynos EUB Binding (WinUSB/libusbK/UsbDk) — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$idsMain='VID_04E8&PID_(1234|2909|2910|2911|2912|2913|2914|2915|2916|2917|2918|2919|2920)'; $idsAlt='VID_090C&PID_1000'; $cand = Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $idsMain -or $_.InstanceId -match $idsAlt }; $cand = $cand | Where-Object { $_.Manufacturer -match 'Samsung' -or $_.FriendlyName -match 'Samsung|Exynos' }; if (-not $cand) { exit 0 }; $drv = $cand | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Covers Samsung Exynos USB Boot/EUB with Samsung/Exynos naming; non-intrusive."
-    },
-
-    {
-      "id": "google-adb-interface-binding-win",
-      "title": "Google ADB Interface Binding — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$dev = Get-PnpDevice -PresentOnly | Where-Object { $_.FriendlyName -match 'Android ADB Interface|Android Composite ADB Interface' -or $_.Class -eq 'AndroidUsbDeviceClass' }; if (-not $dev) { exit 0 }; $drv = $dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'androidwinusb|winusb|libusbk|usbdk' -or $_.Provider -match 'Google|UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Passes if ADB interface not present, or if bound to Google/WinUSB/libusbK/UsbDk."
-    }
+    { "id": "google-adb-binding-win", "title": "Google ADB Interface — binding check",
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$dev=Get-PnpDevice -PresentOnly | ? { $_.FriendlyName -match 'Android ADB Interface|Android Composite ADB Interface' -or $_.Class -eq 'AndroidUsbDeviceClass' }; if (-not $dev) {exit 0}; $drv=$dev | % { try { [pscustomobject]@{Inf=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Prov=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data} } catch {} }; if ($drv | ? { $_.Inf -match 'androidwinusb|winusb|libusbk|usbdk' -or $_.Prov -match 'Google|UsbDk' }) {exit 0} else {exit 1}" ] } }
   ]
 }
