@@ -1,5 +1,5 @@
 {
-  "version": "2.4",
+  "version": "2.5",
   "os": "windows",
   "items": [
     {
@@ -76,11 +76,11 @@
       "check": {
         "type": "multi_any",
         "checks": [
-          { "type": "file_exists", "path": "{cache_root}/libimobiledevice/ideviceinfo.exe" },
-          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" }
+          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" },
+          { "type": "file_exists", "path": "{cache_root}/apple_dfu/apple_dfu_inf_pack.zip" }
         ]
       },
-      "notes": "Provide ideviceinfo.exe under {cache_root}/libimobiledevice/ in your drivers zip."
+      "notes": "Optional: add {cache_root}/libimobiledevice/ideviceinfo.exe to your ZIP if you want CLI tools staged too."
     },
     {
       "id": "pongoos-win",
@@ -95,7 +95,7 @@
       "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] },
-      "notes": "Relies on Python3 + pyusb + libusb DLL staged earlier."
+      "notes": "Requires Python3 + pyusb + libusb DLL staged earlier."
     },
     {
       "id": "apple-drivers-win",
@@ -130,7 +130,7 @@
     {
       "id": "zadig-tool-win",
       "title": "Zadig USB Driver Tool (win)",
-      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/zadig.zip" },
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/zadig.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
       "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/zadig.exe" },
       "notes": "For manual rebinding: Options → List All Devices → select Apple Mobile Device (DFU Mode) → WinUSB/libusbK/UsbDk → Install."
