@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "os": "linux",
+  "items": [
+    {
+      "id": "adb-linux",
+      "title": "Android ADB (linux)",
+      "check": {
+        "type": "exec_ok",
+        "path": "{cache_root}/TechGuyCheckm8/tools/linux/adb",
+        "args": ["version"]
+      },
+      "notes": "If this fails: place adb under {cache_root}/TechGuyCheckm8/tools/linux/ or install android-sdk-platform-tools (e.g., sudo apt install android-tools-adb)."
+    },
+    {
+      "id": "fastboot-linux",
+      "title": "Android Fastboot (linux)",
+      "check": {
+        "type": "exec_ok",
+        "path": "{cache_root}/TechGuyCheckm8/tools/linux/fastboot",
+        "args": ["--version"]
+      },
+      "notes": "If this fails: place fastboot under {cache_root}/TechGuyCheckm8/tools/linux/ or install android-tools-fastboot."
+    },
+    {
+      "id": "adb-device-present-linux",
+      "title": "ADB device visibility — non-intrusive",
+      "check": {
+        "type": "exec_ok",
+        "path": "{cache_root}/TechGuyCheckm8/tools/linux/adb",
+        "args": ["devices"]
+      },
+      "notes": "Passes regardless of devices. GUI should parse output to show connected/no device."
+    },
+    {
+      "id": "udev-rules-android-linux",
+      "title": "udev rules for Android (linux) — advisory",
+      "check": {
+        "type": "multi_any",
+        "checks": [
+          { "type": "file_exists", "path": "/etc/udev/rules.d/51-android.rules" },
+          { "type": "file_exists", "path": "/lib/udev/rules.d/51-android.rules" }
+        ]
+      },
+      "notes": "If missing: create /etc/udev/rules.d/51-android.rules with common vendor IDs, then: sudo udevadm control --reload-rules && sudo udevadm trigger. Unplug/replug device. (This item is advisory; Doctor still passes other checks.)"
+    }
+  ]
+}
