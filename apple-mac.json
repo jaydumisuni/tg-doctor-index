@@ -1,6 +1,6 @@
 {
   "version": "2.1",
-  "os": "mac",
+  "os": "linux",
   "items": [
     {
       "id": "checkm8-pack",
@@ -11,49 +11,49 @@
       "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": {
         "type": "exec_ok",
-        "path": "{cache_root}/TechGuyCheckm8/tools/mac/irecovery",
+        "path": "{cache_root}/TechGuyCheckm8/tools/linux/irecovery",
         "args": ["-V"]
       }
     },
     {
-      "id": "python3-runtime-mac",
-      "title": "Python3 runtime (mac)",
+      "id": "python3-runtime-linux",
+      "title": "Python3 runtime (linux)",
       "check": {
         "type": "exec_ok",
         "path": "python3",
         "args": ["--version"]
       },
-      "notes": "Python3 not found. Install with: brew install python"
+      "notes": "Python3 not found. Install with: sudo apt install -y python3"
     },
     {
-      "id": "ipwndfu-mac",
-      "title": "ipwndfu (mac)",
+      "id": "ipwndfu-linux",
+      "title": "ipwndfu (linux)",
       "release": {
         "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip"
       },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/mac/" },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/linux/" },
       "check": {
         "type": "exec_ok",
         "path": "python3",
-        "args": ["{cache_root}/TechGuyCheckm8/tools/mac/ipwndfu-master/ipwndfu", "-h"]
+        "args": ["{cache_root}/TechGuyCheckm8/tools/linux/ipwndfu-master/ipwndfu", "-h"]
       }
     },
     {
-      "id": "arduino-cli-mac",
-      "title": "Arduino CLI (mac)",
+      "id": "arduino-cli-linux",
+      "title": "Arduino CLI (linux)",
       "check": {
         "type": "exec_ok",
         "path": "arduino-cli",
         "args": ["version"]
       },
-      "notes": "If this fails: brew install arduino-cli"
+      "notes": "If this fails (Debian/Ubuntu): sudo apt install -y arduino-cli  • or use official tarball from Arduino."
     },
     {
-      "id": "arduino-helper-present-mac",
-      "title": "Arduino status helper present (mac)",
+      "id": "arduino-helper-present-linux",
+      "title": "Arduino status helper present (linux)",
       "check": {
         "type": "file_exists",
-        "path": "{cache_root}/TechGuyCheckm8/tools/mac/arduino_status.py"
+        "path": "{cache_root}/TechGuyCheckm8/tools/linux/arduino_status.py"
       },
       "notes": "Helper script used by the GUI to detect Arduino ports and connection state."
     }
