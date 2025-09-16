@@ -1,142 +1,29 @@
 {
-  "version": "2.1",
-  "os": "windows",
-  "items": [
-    {
-      "id": "checkm8-pack",
-      "title": "TechGuy Checkm8 Pack",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] },
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe" }
-        ]
-      }
-    },
-    {
-      "id": "libusb-runtime-win",
-      "title": "libusb runtime (win)",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/libusb/releases/download/v1.0.29/libusb-1.0.29-win64.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
-          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
-        ]
-      }
-    },
-    {
-      "id": "python3-runtime-win",
-      "title": "Python3 runtime (win)",
-      "check": {
-        "type": "exec_ok",
-        "path": "py",
-        "args": ["-3", "--version"]
-      },
-      "notes": "Python 3 not found. Install from https://www.python.org/downloads/windows/ and ensure the 'py' launcher is available."
-    },
-    {
-      "id": "ipwndfu-win",
-      "title": "ipwndfu (win)",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": {
-        "type": "exec_ok",
-        "path": "py",
-        "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"]
-      }
-    },
-    {
-      "id": "apple-windows-drivers-pack",
-      "title": "Apple + Arduino Windows Drivers",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/apple_dfu/apple_dfu_inf_pack.zip" },
-          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" },
-          { "type": "file_exists", "path": "{cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/checkm8-a5-master/checkm8-a5-master.ino" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USBHost/src/Usb.cpp" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_2.0/Usb.cpp" },
-          { "type": "file_exists", "path": "{cache_root}/arduino_driver/Arduino/libraries/USB_Host_Shield_Library_2.0/Usb.cpp" },
-          { "type": "file_exists", "path": "{cache_root}/libusbk/zadig.exe" },
-          { "type": "file_exists", "path": "{cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi" }
-        ]
-      },
-      "notes": "Stages Apple DFU + MobileDeviceSupport, Arduino CLI + libraries, Zadig, and UsbDk MSI inside assets."
-    },
-    {
-      "id": "zadig-tool-win",
-      "title": "Zadig USB Driver Tool (win)",
-      "release": {
-        "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/zadig.zip"
-      },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": {
-        "type": "file_exists",
-        "path": "{cache_root}/TechGuyCheckm8/tools/win/zadig.exe"
-      },
-      "notes": "Use Zadig to bind Apple DFU to WinUSB/libusbK if needed:\n1) Put device in DFU (black screen).\n2) Open {cache_root}/TechGuyCheckm8/tools/win/zadig.exe.\n3) Options → List All Devices.\n4) Select 'Apple Mobile Device (DFU Mode)'.\n5) Choose 'WinUSB' or 'libusbK' → Install Driver."
-    },
-    {
-      "id": "usbdk-installed-win",
-      "title": "UsbDk driver installed",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$svc = Get-Service -Name 'UsbDk' -ErrorAction SilentlyContinue; if ($svc -and $svc.Status -ne 'Stopped') { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "If this fails: run {cache_root}/UsbDk/UsbDk_1.0.22_x64_4.msi, then re-run checks."
-    },
-    {
-      "id": "dfu-driver-binding-win",
-      "title": "DFU driver binding (WinUSB/libusbK/UsbDk) — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile",
-          "-Command",
-          "$ids='VID_05AC&PID_1227'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk. Fails only when a DFU device is present and bound to Apple driver."
-    },
-    {
-      "id": "arduino-cli-win",
-      "title": "Arduino CLI (win)",
-      "check": {
-        "type": "exec_ok",
-        "path": "arduino-cli",
-        "args": ["version"]
-      },
-      "notes": "If this fails: install Arduino CLI from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
-    },
-    {
-      "id": "arduino-helper-present-win",
-      "title": "Arduino status helper present",
-      "check": {
-        "type": "file_exists",
-        "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py"
-      },
-      "notes": "Helper script used by the GUI to detect Arduino ports and connection state."
-    }
-  ]
+  "id": "apple-drivers-win",
+  "title": "Apple drivers (install-once, auto-cleanup)",
+  "release": {
+    "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip"
+  },
+  "install": {
+    "type": "exec",
+    "path": "powershell",
+    "args": [
+      "-NoProfile",
+      "-ExecutionPolicy", "Bypass",
+      "-File",
+      "{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1",
+      "-ZipPath",
+      "{cache_root}/Apple.windows.drivers.zip"
+    ]
+  },
+  "check": {
+    "type": "exec_ok",
+    "path": "powershell",
+    "args": [
+      "-NoProfile",
+      "-Command",
+      "$ok1 = @(Get-ChildItem 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object { try { (Get-ItemProperty $_.PSPath).DisplayName } catch {} } | Where-Object { $_ -match 'Apple Mobile Device Support' }).Count -gt 0; $ok2 = (pnputil /enum-drivers | Out-String) -match 'Apple Mobile Device USB DFU'; if ($ok1 -and $ok2) { exit 0 } else { exit 1 }"
+    ]
+  },
+  "notes": "Installs Apple Mobile Device Support + DFU driver if missing, then deletes installers. Arduino libs are staged to assets; installers are not kept."
 }
