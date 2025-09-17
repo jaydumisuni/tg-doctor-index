@@ -1,5 +1,5 @@
 {
-  "version": "2.3",
+  "version": "2.4",
   "os": "windows",
   "items": [
     {
@@ -14,7 +14,7 @@
           "$b = (bcdedit /enum | Out-String); if ($b -match 'testsigning\\s+Yes' -or $b -match 'nointegritychecks\\s+Yes') { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Required for driver installs. If this fails, run {cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1 (reboot required)."
+      "notes": "Reboot after enabling Test Mode, then re-run checks."
     },
 
     {
@@ -27,7 +27,20 @@
           { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1" }
         ]
       },
-      "notes": "DSE toggle + Apple driver installer (install-once with cleanup)."
+      "install": {
+        "type": "exec",
+        "path": "powershell",
+        "args": [
+          "-NoProfile","-ExecutionPolicy","Bypass","-Command",
+          "$dst = '{cache_root}/TechGuyCheckm8/tools/win' -replace '/', [IO.Path]::DirectorySeparatorChar;",
+          "New-Item -ItemType Directory -Force -Path $dst | Out-Null;",
+          "$dse = @\"\n# Toggle Windows Test Mode / DSE off\nbcdedit /set testsigning on 2>$null\nbcdedit /set nointegritychecks on 2>$null\nexit 0\n\"@;",
+          "Set-Content -LiteralPath (Join-Path $dst 'ensure_dse_off.ps1') -Value $dse -Encoding UTF8;",
+          "$apple = @\"\nparam([string]$ZipPath)\n$work = Join-Path $env:TEMP ('appledrv__'+[Guid]::NewGuid())\nNew-Item -ItemType Directory -Force -Path $work | Out-Null\nif (-not (Test-Path $ZipPath)) { throw \"Zip not found: $ZipPath\" }\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n[IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $work)\n$msi = Get-ChildItem $work -Recurse -Filter AppleMobileDeviceSupport.msi -ErrorAction SilentlyContinue | Select-Object -First 1\nif ($msi) { Start-Process msiexec -ArgumentList '/i',('\"'+$msi.FullName+'\"'),'/qn','/norestart' -Verb runAs -Wait }\n$infs = Get-ChildItem $work -Recurse -Filter *.inf -ErrorAction SilentlyContinue\nforeach ($inf in $infs) { pnputil /add-driver \"${inf}\" /install | Out-Null }\nRemove-Item -Recurse -Force $work -ErrorAction SilentlyContinue\nexit 0\n\"@;",
+          "Set-Content -LiteralPath (Join-Path $dst 'install_apple_drivers.ps1') -Value $apple -Encoding UTF8; exit 0"
+        ]
+      },
+      "notes": "Creates DSE toggle + Apple driver installer."
     },
 
     {
@@ -58,12 +71,16 @@
       }
     },
 
-    { "id": "python3-runtime-win", "title": "Python3 runtime (win)",
+    {
+      "id": "python3-runtime-win",
+      "title": "Python3 runtime (win)",
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "--version"] },
       "notes": "Install from https://www.python.org/downloads/windows/ if missing."
     },
 
-    { "id": "pyusb-runtime-win", "title": "pyusb (python) runtime",
+    {
+      "id": "pyusb-runtime-win",
+      "title": "pyusb (python) runtime",
       "check": { "type": "exec_ok", "path": "py", "args": ["-3", "-c", "import usb; print(usb.__version__)"] },
       "notes": "If this fails: py -3 -m pip install pyusb (libusb DLL is staged above)."
     },
@@ -80,29 +97,12 @@
           { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" }
         ]
       },
-      "notes": "Provide ideviceinfo.exe under {cache_root}/libimobiledevice/ in your drivers zip."
-    },
-
-    {
-      "id": "pongoos-win",
-      "title": "PongoOS (fork)",
-      "release": { "direct": "https://github.com/jaydumisuni/PongoOS/archive/refs/heads/master.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/pongo/" },
-      "check": { "type": "file_exists", "path": "{cache_root}/pongo/PongoOS-master/README.md" }
-    },
-
-    {
-      "id": "ipwndfu-win",
-      "title": "ipwndfu (win)",
-      "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/ipwndfu", "-h"] }
+      "notes": "Staged contents for later install; not a silent installer."
     },
 
     {
       "id": "apple-drivers-win",
       "title": "Apple drivers (install-once, auto-cleanup)",
-      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
       "install": {
         "type": "exec",
         "path": "powershell",
@@ -120,17 +120,7 @@
           "$ok1 = @(Get-ChildItem 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object { try { (Get-ItemProperty $_.PSPath).DisplayName } catch {} } | Where-Object { $_ -match 'Apple Mobile Device Support' }).Count -gt 0; $ok2 = (pnputil /enum-drivers | Out-String) -match 'Apple Mobile Device USB DFU'; if ($ok1 -and $ok2) { exit 0 } else { exit 1 }"
         ]
       },
-      "notes": "Unzips to temp, installs Apple Mobile Device Support + DFU INF, then deletes installers. Requires DSE disabled."
-    },
-
-    { "id": "arduino-cli-win", "title": "Arduino CLI (win)",
-      "check": { "type": "exec_ok", "path": "arduino-cli", "args": ["version"] },
-      "notes": "If this fails: install from {cache_root}/arduino-cli core/arduino-cli_1.3.1_Windows_64bit.msi, then re-run."
-    },
-
-    { "id": "arduino-helper-present-win", "title": "Arduino status helper present",
-      "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/arduino_status.py" },
-      "notes": "Helper used by the GUI to detect Arduino ports and connection state."
+      "notes": "Needs DSE disabled. Installs AMDS + DFU .inf then cleans up."
     },
 
     {
@@ -139,7 +129,23 @@
       "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/" },
       "check": { "type": "file_exists", "path": "{cache_root}/libusbk/zadig.exe" },
-      "notes": "For manual rebinding: Options → List All Devices → select Apple Mobile Device (DFU Mode) → WinUSB/libusbK/UsbDk → Install."
+      "notes": "Manual rebind: Options → List All Devices → select Apple Mobile Device (DFU Mode) → WinUSB/libusbK/UsbDk → Install."
+    },
+
+    {
+      "id": "ipwndfu-win",
+      "title": "ipwndfu (scripts present)",
+      "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
+      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
+      "check": {
+        "type": "exec_ok",
+        "path": "py",
+        "args": [
+          "-3",
+          "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/checkm8.py",
+          "-h"
+        ]
+      }
     },
 
     {
