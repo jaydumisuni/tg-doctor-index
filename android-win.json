@@ -18,15 +18,9 @@
     },
 
     {
-      "id": "doctor-helper-scripts-win",
-      "title": "Doctor helper scripts present",
-      "check": {
-        "type": "multi_all",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/ensure_dse_off.ps1" },
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1" }
-        ]
-      },
+      "id": "doctor-installer-helper-win",
+      "title": "Doctor installer helper present",
+      "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1" },
       "install": {
         "type": "exec",
         "path": "powershell",
@@ -34,132 +28,99 @@
           "-NoProfile","-ExecutionPolicy","Bypass","-Command",
           "$dst = '{cache_root}/TechGuyCheckm8/tools/win' -replace '/', [IO.Path]::DirectorySeparatorChar;",
           "New-Item -ItemType Directory -Force -Path $dst | Out-Null;",
-          "$dse = @\"\n# Toggle Windows Test Mode / DSE off\nbcdedit /set testsigning on 2>$null\nbcdedit /set nointegritychecks on 2>$null\nexit 0\n\"@;",
-          "Set-Content -LiteralPath (Join-Path $dst 'ensure_dse_off.ps1') -Value $dse -Encoding UTF8;",
-          "$apple = @\"\nparam([string]$ZipPath)\n$work = Join-Path $env:TEMP ('appledrv__'+[Guid]::NewGuid())\nNew-Item -ItemType Directory -Force -Path $work | Out-Null\nif (-not (Test-Path $ZipPath)) { throw \"Zip not found: $ZipPath\" }\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n[IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $work)\n$msi = Get-ChildItem $work -Recurse -Filter AppleMobileDeviceSupport.msi -ErrorAction SilentlyContinue | Select-Object -First 1\nif ($msi) { Start-Process msiexec -ArgumentList '/i',('\"'+$msi.FullName+'\"'),'/qn','/norestart' -Verb runAs -Wait }\n$infs = Get-ChildItem $work -Recurse -Filter *.inf -ErrorAction SilentlyContinue\nforeach ($inf in $infs) { pnputil /add-driver \"${inf}\" /install | Out-Null }\nRemove-Item -Recurse -Force $work -ErrorAction SilentlyContinue\nexit 0\n\"@;",
-          "Set-Content -LiteralPath (Join-Path $dst 'install_apple_drivers.ps1') -Value $apple -Encoding UTF8; exit 0"
+          "$code=@\"\nparam([string]$ZipUrl,[string]$CheckType)\n$work = Join-Path $env:TEMP ('drv__'+[Guid]::NewGuid())\nNew-Item -ItemType Directory -Force -Path $work | Out-Null\n$zip = Join-Path $work 'pkg.zip'\nInvoke-WebRequest $ZipUrl -OutFile $zip -UseBasicParsing\nAdd-Type -AssemblyName System.IO.Compression.FileSystem\n[IO.Compression.ZipFile]::ExtractToDirectory($zip, $work)\n$exes = Get-ChildItem $work -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue\nforeach ($f in $exes) {\n  if ($f.Extension -ieq '.msi') { Start-Process msiexec -ArgumentList '/i',('\"'+$f.FullName+'\"'),'/qn','/norestart' -Verb runAs -Wait }\n  else { Start-Process $f.FullName -ArgumentList '/S','/quiet','/qn','/norestart' -Verb runAs -Wait }\n}\n$infs = Get-ChildItem $work -Recurse -Filter *.inf -ErrorAction SilentlyContinue\nforeach ($inf in $infs) { pnputil /add-driver \"${inf}\" /install | Out-Null }\nRemove-Item -Recurse -Force $work -ErrorAction SilentlyContinue\nexit 0\n\"@;",
+          "Set-Content -LiteralPath (Join-Path $dst 'install_driver.ps1') -Value $code -Encoding UTF8; exit 0"
         ]
       },
-      "notes": "Creates DSE toggle + Apple driver installer."
+      "notes": "Creates the unified driver installer used by all Android items."
     },
 
     {
-      "id": "checkm8-pack",
-      "title": "TechGuy Checkm8 Pack",
-      "release": { "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] },
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe" }
-        ]
-      }
+      "id": "vc-runtimes-win",
+      "title": "Visual C++ Runtimes (All-in-One)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/Visual-C-Runtimes-All-in-One.zip","-CheckType","vc_runtimes" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$keys='HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall'; $ok=Get-ChildItem $keys -ErrorAction SilentlyContinue | % {Get-ItemProperty $_.PSPath} | ? {$_.DisplayName -match 'Microsoft Visual C\\+\\+.*Redistributable'}; if ($ok) {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "libusb-runtime-win",
-      "title": "libusb runtime (win)",
-      "release": { "direct": "https://github.com/jaydumisuni/libusb/releases/download/v1.0.29/libusb-1.0.29-win64.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/win/libusb-1.0.dll" },
-          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/win/irecovery.exe", "args": ["-V"] }
-        ]
-      }
+      "id": "universal-adb-driver-win",
+      "title": "Universal ADB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/universal_adb.zip","-CheckType","adb_universal" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Android ADB Interface' -or $txt -match 'androidwinusb' -or $txt -match 'Google, Inc.' ) {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "python3-runtime-win",
-      "title": "Python3 runtime (win)",
-      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "--version"] },
-      "notes": "Install from https://www.python.org/downloads/windows/ if missing."
+      "id": "qualcomm-qdloader-win",
+      "title": "Qualcomm QDLoader (9008)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/qualcomm_qdloader.zip","-CheckType","qualcomm" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Qualcomm.*QDLoader' -or $txt -match 'HS-USB QDLoader 9008' -or $txt -match 'Provider\\s*:\\s*Qualcomm') {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "pyusb-runtime-win",
-      "title": "pyusb (python) runtime",
-      "check": { "type": "exec_ok", "path": "py", "args": ["-3", "-c", "import usb; print(usb.__version__)"] },
-      "notes": "If this fails: py -3 -m pip install pyusb (libusb DLL is staged above)."
+      "id": "mediatek-vcom-win",
+      "title": "MediaTek VCOM (Preloader/DA)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/mediatek_vcom_inf_pack.zip","-CheckType","mtk_vcom" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'MediaTek' -or $txt -match 'VCOM' -or $txt -match 'Preloader') {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "libimobile-windows",
-      "title": "libimobiledevice (windows) staged",
-      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/libimobiledevice/ideviceinfo.exe" },
-          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" }
-        ]
-      },
-      "notes": "Staged contents for later install; not a silent installer."
+      "id": "unisoc-spreadtrum-inf-win",
+      "title": "Unisoc / Spreadtrum (INF pack)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc_inf_pack.zip","-CheckType","unisoc_inf" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "apple-drivers-win",
-      "title": "Apple drivers (install-once, auto-cleanup)",
-      "install": {
-        "type": "exec",
-        "path": "powershell",
-        "args": [
-          "-NoProfile","-ExecutionPolicy","Bypass",
-          "-File","{cache_root}/TechGuyCheckm8/tools/win/install_apple_drivers.ps1",
-          "-ZipPath","{cache_root}/Apple.windows.drivers.zip"
-        ]
-      },
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile","-Command",
-          "$ok1 = @(Get-ChildItem 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object { try { (Get-ItemProperty $_.PSPath).DisplayName } catch {} } | Where-Object { $_ -match 'Apple Mobile Device Support' }).Count -gt 0; $ok2 = (pnputil /enum-drivers | Out-String) -match 'Apple Mobile Device USB DFU'; if ($ok1 -and $ok2) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Needs DSE disabled. Installs AMDS + DFU .inf then cleans up."
+      "id": "unisoc-spreadtrum-setup-win",
+      "title": "Unisoc / Spreadtrum (Setup EXE)",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/spd_unisoc.zip","-CheckType","unisoc_setup" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Spreadtrum' -or $txt -match 'Unisoc' -or $txt -match 'SciU2S') {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "zadig-tool-win",
-      "title": "Zadig USB Driver Tool (Apple)",
-      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": { "type": "file_exists", "path": "{cache_root}/libusbk/zadig.exe" },
-      "notes": "Manual rebind: Options → List All Devices → select Apple Mobile Device (DFU Mode) → WinUSB/libusbK/UsbDk → Install."
+      "id": "samsung-usb-win",
+      "title": "Samsung USB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/samsung_usb.zip","-CheckType","samsung_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'SAMSUNG.*USB' -or $txt -match 'Samsung Android USB') {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "ipwndfu-win",
-      "title": "ipwndfu (scripts present)",
-      "release": { "direct": "https://github.com/jaydumisuni/ipwndfu/archive/refs/heads/master.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/TechGuyCheckm8/tools/win/" },
-      "check": {
-        "type": "exec_ok",
-        "path": "py",
-        "args": [
-          "-3",
-          "{cache_root}/TechGuyCheckm8/tools/win/ipwndfu-master/checkm8.py",
-          "-h"
-        ]
-      }
+      "id": "exynos-eub-driver-win",
+      "title": "Samsung Exynos EUB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/exynos.usb.driver.zip","-CheckType","exynos_eub" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'Exynos' -or ($txt -match 'Samsung' -and $txt -match 'USB')) {exit 0} else {exit 1}" ] }
     },
 
     {
-      "id": "dfu-driver-binding-win",
-      "title": "DFU driver binding (WinUSB/libusbK/UsbDk) — non-intrusive",
-      "check": {
-        "type": "exec_ok",
-        "path": "powershell",
-        "args": [
-          "-NoProfile","-Command",
-          "$ids='VID_05AC&PID_1227'; $dev=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match $ids }; if (-not $dev) { exit 0 }; $drv=$dev | ForEach-Object { try { [PSCustomObject]@{ InfPath=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverInfPath').Data; Provider=(Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_DriverProvider').Data } } catch {} }; if ($drv | Where-Object { $_.InfPath -match 'winusb|libusbk|usbdk' -or $_.Provider -match 'UsbDk' }) { exit 0 } else { exit 1 }"
-        ]
-      },
-      "notes": "Passes if no DFU device is connected, or if bound to WinUSB/libusbK/UsbDk."
+      "id": "huawei-usb-com-win",
+      "title": "Huawei USB/COM Drivers",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/huawei_usb_com_1.0.zip","-CheckType","huawei_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HUAWEI' -or $txt -match 'hw_usbdev' -or $txt -match 'hw_usbvcom') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "lg-usb-win",
+      "title": "LG Mobile Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/lg_usb.zip","-CheckType","lg_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'LG Mobile' -or $txt -match 'LG Electronics') {exit 0} else {exit 1}" ] }
+    },
+
+    {
+      "id": "htc-usb-win",
+      "title": "HTC USB Driver",
+      "release": { "direct": "https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip" },
+      "install": { "type": "exec", "path": "powershell", "args": [ "-NoProfile","-ExecutionPolicy","Bypass","-File","{cache_root}/TechGuyCheckm8/tools/win/install_driver.ps1","-ZipUrl","https://github.com/jaydumisuni/android-drivers/releases/download/v1/htc_usb.zip","-CheckType","htc_usb" ] },
+      "check": { "type": "exec_ok", "path": "powershell", "args": [ "-NoProfile","-Command", "$txt=(pnputil /enum-drivers | Out-String); if ($txt -match 'HTC' -or $txt -match 'BMP USB') {exit 0} else {exit 1}" ] }
     }
   ]
 }
