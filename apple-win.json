@@ -69,19 +69,21 @@
     },
 
     {
-      "id": "libimobile-windows",
-      "title": "libimobiledevice (windows) staged",
-      "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": {
-        "type": "multi_any",
-        "checks": [
-          { "type": "file_exists", "path": "{cache_root}/libimobiledevice/ideviceinfo.exe" },
-          { "type": "file_exists", "path": "{cache_root}/apple_mobile_device_support/AppleMobileDeviceSupport.msi" }
-        ]
-      },
-      "notes": "Provide ideviceinfo.exe under {cache_root}/libimobiledevice/ in your drivers zip."
-    },
+  "id": "libimobile-windows",
+  "title": "libimobiledevice (windows) staged",
+  "release": { "direct": "https://github.com/jaydumisuni/Apple-windows-drivers/releases/download/v1/Apple.windows.drivers.zip" },
+  "install": { "type": "unzip", "dest": "{cache_root}/" },
+  "check": {
+    "type": "exec_ok",
+    "path": "powershell",
+    "args": [
+      "-NoProfile","-Command",
+      "$ok1 = @(Get-ChildItem 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall','HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall' -ea SilentlyContinue | % { try { (Get-ItemProperty $_.PSPath).DisplayName } catch {} } | ? { $_ -match 'Apple Mobile Device Support' }).Count -gt 0; if ($ok1){exit 0}else{exit 1}"
+    ]
+  },
+  "notes": "Zip stages AppleMobileDeviceSupport.msi etc.; install happens via 'Apple drivers (install-once)'."
+}
+,
 
     {
       "id": "pongoos-win",
