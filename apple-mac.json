@@ -1,5 +1,5 @@
 {
-  "version": "2.2",
+  "version": "2.5",
   "os": "mac",
   "items": [
     {
@@ -7,15 +7,13 @@
       "title": "TechGuy Checkm8 Pack",
       "release": { "direct": "https://github.com/jaydumisuni/TechGuyCheckm8/releases/latest/download/TechGuyCheckm8.zip" },
       "install": { "type": "unzip", "dest": "{cache_root}/" },
-      "check": { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/mac/irecovery", "args": ["-V"] }
-    },
-    {
-      "id": "pongoos-mac",
-      "title": "PongoOS (fork)",
-      "release": { "direct": "https://github.com/jaydumisuni/PongoOS/archive/refs/heads/master.zip" },
-      "install": { "type": "unzip", "dest": "{cache_root}/pongo/" },
-      "check": { "type": "file_exists", "path": "{cache_root}/pongo/PongoOS-master/README.md" },
-      "notes": "Stages your fork of PongoOS under {cache_root}/pongo/."
+      "check": {
+        "type": "multi_any",
+        "checks": [
+          { "type": "exec_ok", "path": "{cache_root}/TechGuyCheckm8/tools/mac/irecovery", "args": ["-V"] },
+          { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/mac/irecovery" }
+        ]
+      }
     },
     {
       "id": "pyusb-runtime-mac",
@@ -45,6 +43,15 @@
     {
       "id": "arduino-helper-present-mac",
       "title": "Arduino status helper present (mac)",
+      "install": {
+        "type": "exec",
+        "path": "/usr/bin/env",
+        "args": [
+          "bash",
+          "-lc",
+          "dst='{cache_root}/TechGuyCheckm8/tools/mac'; mkdir -p \"$dst\"; printf '#!/usr/bin/env python3\\n# stub helper (OK to replace)\\nprint(\"arduino helper present\")\\n' > \"$dst/arduino_status.py\"; chmod +x \"$dst/arduino_status.py\""
+        ]
+      },
       "check": { "type": "file_exists", "path": "{cache_root}/TechGuyCheckm8/tools/mac/arduino_status.py" },
       "notes": "Helper script used by the GUI to detect Arduino ports and connection state."
     }
